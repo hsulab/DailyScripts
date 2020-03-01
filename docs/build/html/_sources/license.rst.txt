@@ -1,5 +1,6 @@
-MIT License
+License
 ===========
+MIT License
 
 Copyright (c) 2020 Jiayan Xu
 

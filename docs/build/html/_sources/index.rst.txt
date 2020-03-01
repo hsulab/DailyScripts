@@ -1,16 +1,14 @@
 Daily Scripts Documentation
 ===========================
 
-
-Contents:
-^^^^^^^^^
-
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
    
+   about
+   basic
+   admonition
    license
-   help
-
 
 
 Indices and tables
