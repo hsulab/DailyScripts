@@ -6,8 +6,7 @@ Daily Scripts Documentation
    :caption: Contents:
    
    about
-   basic
-   admonition
+   scripts
    license
 
 

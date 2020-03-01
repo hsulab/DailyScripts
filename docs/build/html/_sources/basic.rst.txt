@@ -26,7 +26,7 @@ Enumerated lists:
 Definition lists:
 ``````````````````
 
-what
+`what`
     Definition lists associate a term with a definition.
 
 how
