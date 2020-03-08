@@ -1,10 +1,9 @@
-Scripts
-=======
+Geometric Optimization
+======================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    
-   sc
-   md
+   ts
 

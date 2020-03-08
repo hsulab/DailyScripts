@@ -1,9 +1,8 @@
-Molecular Dynamics
-==================
-
 Slow-Growth Calculation
-------------------------
+=======================
+
 Analyze VASP REPORT File
+------------------------
 
 ``read_report.py -n 1 -nf 1000 -p 1``
 

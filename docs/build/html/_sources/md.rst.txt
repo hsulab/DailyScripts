@@ -1,5 +1,5 @@
-Scripts
-=======
+Molecular Dynamics
+==================
 
 .. toctree::
    :maxdepth: 2

@@ -1,11 +1,8 @@
-Molecular Dynamics
+Static Calculation
 ==================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    
-   standmd
-   slowgro
-   umesamp
-
+   geoopt

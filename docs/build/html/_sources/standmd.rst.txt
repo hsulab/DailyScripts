@@ -1,5 +1,5 @@
-Molecular Dynamics
-==================
-
 Standard Molecular Dynamics
----------------------------
+===========================
+
+Various Ensembles
+-----------------

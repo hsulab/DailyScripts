@@ -1,5 +1,5 @@
-Molecular Dynamics
-==================
-
 Umbrella Sampling Calculation
------------------------------
+=============================
+
+Why Umbrella Sampling
+---------------------
