@@ -7,6 +7,7 @@ Daily Scripts Documentation
    
    about
    scripts
+   swares
    license
 
 

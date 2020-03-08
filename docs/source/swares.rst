@@ -5,7 +5,5 @@ Scripts
    :maxdepth: 2
    :caption: Contents:
    
-   standmd
-   slowgro
-   umesamp
+   matstudio
 

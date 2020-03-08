@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Daily Scripts Documentation &mdash; DailyScripts 0.1.1 documentation</title>
+  <title>Molecular Dynamics &mdash; DailyScripts 0.1.1 documentation</title>
   
 
   
@@ -36,7 +36,8 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="About" href="about.html" /> 
+    <link rel="next" title="Molecular Dynamics" href="umesamp.html" />
+    <link rel="prev" title="Molecular Dynamics" href="standmd.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -50,7 +51,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> DailyScripts
+            <a href="index.html" class="icon icon-home"> DailyScripts
           
 
           
@@ -85,9 +86,20 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scripts.html">Scripts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="scripts.html">Scripts</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="md.html">Scripts</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="standmd.html">Molecular Dynamics</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Molecular Dynamics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#slow-growth-calculation">Slow-Growth Calculation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="umesamp.html">Molecular Dynamics</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="swares.html">Scripts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
@@ -104,7 +116,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">DailyScripts</a>
+          <a href="index.html">DailyScripts</a>
         
       </nav>
 
@@ -133,15 +145,19 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#">Docs</a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Daily Scripts Documentation</li>
+          <li><a href="scripts.html">Scripts</a> &raquo;</li>
+        
+          <li><a href="md.html">Scripts</a> &raquo;</li>
+        
+      <li>Molecular Dynamics</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/slowgro.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -154,31 +170,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="daily-scripts-documentation">
-<h1>Daily Scripts Documentation<a class="headerlink" href="#daily-scripts-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scripts.html">Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="md.html">Scripts</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="swares.html">Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="matstudio.html">Molecular Dynamics</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
+  <div class="section" id="molecular-dynamics">
+<h1>Molecular Dynamics<a class="headerlink" href="#molecular-dynamics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="slow-growth-calculation">
+<h2>Slow-Growth Calculation<a class="headerlink" href="#slow-growth-calculation" title="Permalink to this headline">¶</a></h2>
+<p>Analyze VASP REPORT File</p>
+<p><code class="docutils literal notranslate"><span class="pre">read_report.py</span> <span class="pre">-n</span> <span class="pre">1</span> <span class="pre">-nf</span> <span class="pre">1000</span> <span class="pre">-p</span> <span class="pre">1</span></code></p>
+<dl class="option-list">
+<dt><kbd><span class="option">-n</span></kbd></dt>
+<dd><p>number of constraints</p>
+</dd>
+<dt><kbd><span class="option">-n<var>f</var></span></kbd></dt>
+<dd><p>number of frames (steps)</p>
+</dd>
+<dt><kbd><span class="option">-p</span></kbd></dt>
+<dd><p>parameter plotted</p>
+</dd>
+</dl>
+<p><code class="docutils literal notranslate"><span class="pre">thermo_integration.py</span> <span class="pre">-n</span> <span class="pre">1</span> <span class="pre">-nf</span> <span class="pre">1000</span> <span class="pre">-p</span> <span class="pre">1</span></code></p>
+<dl class="option-list">
+<dt><kbd><span class="option">-f</span></kbd></dt>
+<dd><p>filename</p>
+</dd>
+<dt><kbd><span class="option">-n<var>f</var></span></kbd></dt>
+<dd><p>number of frames (steps)</p>
+</dd>
+</dl>
 </div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
 </div>
 
 
@@ -189,8 +207,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="about.html" class="btn btn-neutral float-right" title="About" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="umesamp.html" class="btn btn-neutral float-right" title="Molecular Dynamics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
+      
+        <a href="standmd.html" class="btn btn-neutral float-left" title="Molecular Dynamics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
