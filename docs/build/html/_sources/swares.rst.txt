@@ -1,5 +1,5 @@
-Scripts
-=======
+Softwares
+=========
 
 .. toctree::
    :maxdepth: 2
