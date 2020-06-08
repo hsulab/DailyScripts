@@ -1,0 +1,8 @@
+#!/bin/bash
+if [ $# -eq 0 ]
+then
+    grep "sigma->0" OUTCAR | tail -n 1
+elif [ $# -eq 1 ]
+then 
+    grep "sigma->0" OUTCAR | head -n $1 | tail -n 1
+fi
