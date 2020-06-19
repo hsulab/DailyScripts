@@ -34,7 +34,7 @@ def read_outcar(outcar='OUTCAR',natoms=100,verbose=True,wdat=False,**kwargs):
     if kwargs:
         if 'nframes' in kwargs.keys():
             if kwargs['nframes'] > 0:
-                nframes = int(kwargs[nframes])
+                nframes = int(kwargs['nframes'])
 
     # read OUTCAR
     frames = []
