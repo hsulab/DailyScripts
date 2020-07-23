@@ -11,6 +11,8 @@ import matplotlib as mpl
 mpl.use('Agg') #silent mode
 from matplotlib import pyplot as plt
 
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, InsetPosition, zoomed_inset_axes, mark_inset
+
 MAXLINE = 10000
 
 class SplineRepulsion():
@@ -75,9 +77,7 @@ class SplineRepulsion():
 
         return rep
 
-
-def plot_spline(skf='Pt-Pt.skf', pic='spl.png'):
-    """Plot the Spline Repulsive Potential..."""
+def read_spline(skf):
     # read spline data
     fopen = open(skf, 'r')
     for i in range(MAXLINE):
@@ -117,35 +117,80 @@ def plot_spline(skf='Pt-Pt.skf', pic='spl.png'):
     # init spline
     sprp = SplineRepulsion(npoints,cutoff,begrep,splrep,endrep)
 
-    # plot
-    rs = np.linspace(0.,sprp.cutoff-0.01,1000)
+    return sprp
+
+
+def plot_spline(skf='Pt-Pt.skf', skf2=None, rmin=1.0, pic='spl.png'):
+    """Plot the Spline Repulsive Potential..."""
+    # read spline, turn into spline object
+    SP_rep1 = read_spline(skf)
+
+    # generate data
+    rs = np.linspace(0.,SP_rep1.cutoff-0.01,1000)
     reps = []
     for r in rs:
-        reps.append(sprp.calc_rep(r))
+        reps.append(SP_rep1.calc_rep(r))
     skf_name = os.path.basename(skf).split('.')[0]
+
+    rs = np.array(rs)
+    reps = np.array(reps)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
     ax.set_title(r'$%s$ Spline Repulsive Potential' %skf_name, \
             fontsize=24, fontweight='bold')
-    ax.set_xlabel(r'$r$ / Bohr', fontsize=16)
-    ax.set_ylabel(r'$V_{rep}(r)$ / Hartree', fontsize=16)
+    ax.set_xlabel(r'$r$ / Bohr', fontsize=20)
+    ax.set_ylabel(r'$V_{rep}(r)$ / Hartree', fontsize=20)
 
-    ax.plot(rs, reps, color='k')
+    skf1_curve, = ax.plot(rs, reps, \
+            color='g', linestyle='-', linewidth=2., \
+            label='Skf-1')
 
-    plt.legend()
+    # inset figure
+    ax2 = plt.axes([0,0,1,1])
+    ip = InsetPosition(ax, [0.4,0.2,0.5,0.5])
+    ax2.set_axes_locator(ip)
+    mark_inset(ax, ax2, loc1=1, loc2=3, fc="none", ec='0.5')
+
+    #ax2 = zoomed_inset_axes(ax, 1, loc=4)
+    r_min, r_max = rmin, SP_rep1.cutoff
+    indices = np.where((rs>r_min) & (rs<r_max))
+    ax2.plot(rs[indices], reps[indices], color='g', linestyle='-', linewidth=2.)
+
+    # skf2 for comparision
+    if skf2:
+        SP_rep2 = read_spline(skf2)
+
+        # generate data
+        rs = np.linspace(0.,SP_rep2.cutoff-0.01,1000)
+        reps = []
+        for r in rs:
+            reps.append(SP_rep2.calc_rep(r))
+
+        rs = np.array(rs)
+        reps = np.array(reps)
+
+        skf2_curve, = ax.plot(rs, reps, \
+                color='orange', linestyle='--', linewidth=2., \
+                label='Skf-2')
+        ax2.plot(rs[indices], reps[indices], color='orange', linestyle='--', linewidth=2.)
+
+    plt.legend(handles=[skf1_curve,skf2_curve])
 
     plt.savefig(pic)
 
 if __name__ == '__main__':
-    """
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-f', '--skf', help='Slater-Koster File')
+    parser.add_argument('-f', '--skf', required=True,\
+            help='Slater-Koster File')
+    parser.add_argument('-f2', '--skf2', default=None, \
+            help='Second Slater-Koster File for Comparision')
     parser.add_argument('-p', '--pic', \
             default='spl.png', help='Spline Repulsive Potential Figure')
+    parser.add_argument('-rmin', '--radius_min', type=float,\
+            default=1.0, help='Minimum Radius for Zoom')
 
     args = parser.parse_args()
-    """
 
-    #plot_spline(args.skf, args.pic)
-    plot_spline()
+    plot_spline(args.skf, args.skf2, args.radius_min, args.pic)
+    #plot_spline()
