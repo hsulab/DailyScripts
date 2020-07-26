@@ -173,8 +173,9 @@ def plot_spline(skf='Pt-Pt.skf', skf2=None, rmin=1.0, pic='spl.png'):
                 color='orange', linestyle='--', linewidth=2., \
                 label='Skf-2')
         ax2.plot(rs[indices], reps[indices], color='orange', linestyle='--', linewidth=2.)
-
-    plt.legend(handles=[skf1_curve,skf2_curve])
+        plt.legend(handles=[skf1_curve,skf2_curve])
+    else:
+        plt.legend(handles=[skf1_curve,])
 
     plt.savefig(pic)
 
