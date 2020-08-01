@@ -16,10 +16,12 @@ def write_xyz(symbols,positions,**kwargs):
 
     # implented properties
     comment_properties = [\
+            'description',\
             'step',\
             'pbc','Lattice',\
             'energy','free_energy',\
-            'stress','virial']
+            'stress','virial'\
+            ]
     atomic_properties = ['species','pos','forces']
 
     # check args
@@ -48,6 +50,10 @@ def write_xyz(symbols,positions,**kwargs):
                     value = int(value)
                     comment_content += ("{:<s}="+"{:<d} "+" ") \
                             .format(key,value)
+                elif key in ['description']:
+                    comment_content += ("{:<s}="+"\"{:<s}\""+" ") \
+                            .format(key,value)
+
             #else:
             #    raise ValueError('Unsupported properties in extended-xyz.')
     else:
