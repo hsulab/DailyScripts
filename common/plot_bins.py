@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+""" Plot metadata
+"""
 
 import argparse
 
 import numpy as np
 
-import matplotlib as mpl
-mpl.use('Agg') #silent mode
-from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('Agg') #silent mode
+import matplotlib.pyplot as plt
 
 def read_metadata(infile):
-    """"""
+    """read metadata"""
     with open(infile, 'r') as reader:
         lines = reader.readlines()
     lines = [line.strip().split() \
@@ -18,20 +20,32 @@ def read_metadata(infile):
     datfiles = [line[0] for line in lines]
     coords = [float(line[1]) for line in lines]
 
+
     return datfiles, coords
 
 def read_usdat(datfile):
+    """read usdat
+    """
     with open(datfile, 'r') as reader:
         lines = reader.readlines()
     lines = [line.strip().split() for line in lines \
             if not line.startswith('#')]
 
-    data = np.array(lines, dtype='float')[:,1]
+    data = np.array(lines, dtype='float')[:, 1]
+
+    nsamples = len(data)
+    smin, smax = np.min(data), np.max(data)
+    if np.fabs(smin-smax) > 0.02:
+        winfo = 'WARN!!!'
+    else:
+        winfo = ""
+    info = ("{:<20s}{:>8d}{:>8.4f}{:>8.4f}{:>10s}").format(datfile, nsamples, smin, smax, winfo)
+    print(info)
 
     return data
 
-def plot_bins():
-    datfiles, coords = read_metadata('METADATA')
+def plot_bins(metadata):
+    datfiles, coords = read_metadata(metadata)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
     ax.set_title('Umbrella Sampling Overlap Analysis', \
@@ -65,4 +79,10 @@ def plot_bins():
     plt.savefig('us-bins.png')
 
 if __name__ == '__main__':
-    plot_bins()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-mt', '--metadata', \
+            default='hist.dat', help='histogram data file')
+
+    args = parser.parse_args()
+
+    plot_bins(args.metadata)
