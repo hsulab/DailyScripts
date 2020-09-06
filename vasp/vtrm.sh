@@ -10,7 +10,9 @@ saved_fnames=('INCAR' 'POSCAR' 'KPOINTS' 'POTCAR' 'CONTCAR' \
               'WAVECAR' 'CHG' 'CHGCAR' 'ICONST' 'PENALTYPOT' \
               'vdw_kernel.bindat' \
               'POSCAR_origin' 'RCOCAR' 'PCVCAR' \
-              'vasp.sh' 'vasp.script' 'fort.188')
+              'plumed.inp' 'plumed.out' \
+              'vasp.pbs' 'vasp.slurm' 'vasp.sh' 'vasp.script' \
+              'fort.188')
 
 # add saved files from arguments
 saved_fnames=(${saved_fnames[@]} $@)
