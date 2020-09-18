@@ -114,14 +114,15 @@ def adjust_poses(poses,refposes):
 
     return poses, refposes
 
-def write_arc(frames,refposes,atoms,lattice,cell_para,trans,arcname):
+def write_arc(frames,refposes,atoms,lattice,cell_para,trans,arcname,adjust):
     content = '!BIOSYM archive 3\nPBC=ON\n'
     for i, frame in enumerate(frames):
         # adjust positions
         poses = frame[0] # cartesian coordinates
-        dirposes = dot(poses, inv(lattice))
-        dirposes, refposes = adjust_poses(dirposes, refposes)
-        poses = dot(dirposes, lattice)
+        if adjust:
+            dirposes = dot(poses, inv(lattice))
+            dirposes, refposes = adjust_poses(dirposes, refposes)
+            poses = dot(dirposes, lattice)
 
         # write time
         content += ('%80.4f\n' % 0.0)
@@ -148,7 +149,7 @@ def write_arc(frames,refposes,atoms,lattice,cell_para,trans,arcname):
 
     return
 
-def out2arc(outcar='OUTCAR',poscar='POSCAR',nframes=100,arcname='vasp.arc'):
+def out2arc(outcar='OUTCAR',poscar='POSCAR',nframes=100,arcname='vasp.arc',adjust=False):
     """ outcar to arc"""
     # read POSCAR
     fname, scaling, lattice, symbols, numbers, refposes, fixes = \
@@ -184,7 +185,7 @@ def out2arc(outcar='OUTCAR',poscar='POSCAR',nframes=100,arcname='vasp.arc'):
     # read OUTCAR and write
     frames = read_outcar(outcar=outcar,natoms=natoms,nframes=nframes)
 
-    write_arc(frames,refposes,atoms,lattice,cell_para,trans_matrix,arcname)
+    write_arc(frames,refposes,atoms,lattice,cell_para,trans_matrix,arcname,adjust)
 
 
 if __name__ == '__main__':
@@ -197,10 +198,12 @@ if __name__ == '__main__':
             help='OUTCAR File')
     parser.add_argument('-a', '--arc', nargs='?', default='vasp.arc', \
             help='ARC File')
+    parser.add_argument('-ad', '--adjust', nargs=1, default=False, \
+            type=bool, help='Number of Frames')
     parser.add_argument('-nf', '--nframes', nargs='?', default=-100, \
             type=int, help='Number of Frames')
 
     args = parser.parse_args()
 
-    out2arc(args.out,args.pos,args.nframes)
+    out2arc(args.out,args.pos,args.nframes,args.adjust)
 
