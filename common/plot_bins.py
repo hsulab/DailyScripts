@@ -23,7 +23,7 @@ def read_metadata(infile):
 
     return datfiles, coords
 
-def read_usdat(datfile):
+def read_usdat(datfile, nEquil):
     """read usdat
     """
     with open(datfile, 'r') as reader:
@@ -31,7 +31,7 @@ def read_usdat(datfile):
     lines = [line.strip().split() for line in lines \
             if not line.startswith('#')]
 
-    data = np.array(lines, dtype='float')[:, 1]
+    data = np.array(lines, dtype='float')[nEquil:, 1]
 
     nsamples = len(data)
     smin, smax = np.min(data), np.max(data)
@@ -44,7 +44,7 @@ def read_usdat(datfile):
 
     return data
 
-def plot_bins(metadata):
+def plot_bins(metadata, nBins, nEquil):
     datfiles, coords = read_metadata(metadata)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
@@ -56,8 +56,8 @@ def plot_bins(metadata):
 
     frames = []
     for datfile in datfiles:
-        data = read_usdat(datfile)
-        n, bins, patches = ax.hist(data, bins=10, alpha=0.45)
+        data = read_usdat(datfile, nEquil)
+        n, bins, patches = ax.hist(data, bins=nBins, alpha=0.45)
         bins = np.array(bins)
         centres = (bins[1:] + bins[:-1])/2.
         #print(n)
@@ -82,7 +82,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-mt', '--metadata', \
             default='hist.dat', help='histogram data file')
+    parser.add_argument('-nb', '--numbins', type=int,\
+            default=10, help='number of bins')
+    parser.add_argument('-ne', '--nequil', type=int,\
+            default=300, help='number of equilibrium steps')
 
     args = parser.parse_args()
 
-    plot_bins(args.metadata)
+    plot_bins(args.metadata, args.numbins, args.nequil)
