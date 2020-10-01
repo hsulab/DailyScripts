@@ -10,7 +10,7 @@ saved_fnames=('INCAR' 'POSCAR' 'KPOINTS' 'POTCAR' 'CONTCAR' \
               'WAVECAR' 'CHG' 'CHGCAR' 'ICONST' 'PENALTYPOT' \
               'vdw_kernel.bindat' \
               'POSCAR_origin' 'RCOCAR' 'PCVCAR' \
-              'plumed.inp' 'plumed.out' \
+              'plumed.inp' 'plumed.dat' 'plumed.out' \
               'vasp.pbs' 'vasp.slurm' 'vasp.sh' 'vasp.script' \
               'fort.188')
 
