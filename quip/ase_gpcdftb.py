@@ -76,6 +76,7 @@ class GPC_DFTB(FileIOCalculator):
         self.gp_fpath = gp_fpath
         if not os.path.exists(self.gp_fpath):
             raise ValueError('GAP.xml not exists.')
+        self.gap = Potential(param_filename=self.gp_fpath)
 
         # file names
         self.geo_fname = 'geo_in.gen'
@@ -347,10 +348,13 @@ class GPC_DFTB(FileIOCalculator):
         # GPC
         # after correction, the energy should be binding energy in eV
         atoms_gap = self.atoms.copy()
-        gap = Potential(param_filename=self.gp_fpath)
-        atoms_gap.set_calculator(gap)
+        atoms_gap.set_calculator(self.gap)
+
         potential_energy_error = atoms_gap.get_potential_energy()
         free_energy_error = atoms_gap.get_potential_energy(force_consistent=True)
+
+        forces_error = atoms_gap.get_forces()
+
         stress_error = atoms_gap.get_stress(voigt=True)
 
         atomic_energies = {
@@ -371,6 +375,7 @@ class GPC_DFTB(FileIOCalculator):
         self.results['energy'] += potential_energy_error
         self.results['free_energy'] += free_energy_error
 
+        self.results['forces'] += forces_error
         self.results['stress'] += stress_error
         #print(self.results)
 
