@@ -3,6 +3,7 @@
 """ Plot metadata
 """
 
+import os
 import argparse
 
 import numpy as np
@@ -15,21 +16,24 @@ def read_metadata(infile):
     """read metadata"""
     with open(infile, 'r') as reader:
         lines = reader.readlines()
-    lines = [line.strip().split() \
-            for line in lines if not line.strip().startswith('#')]
+    lines = [
+        line.strip().split() 
+        for line in lines if not line.strip().startswith('#')
+    ]
     datfiles = [line[0] for line in lines]
     coords = [float(line[1]) for line in lines]
-
 
     return datfiles, coords
 
 def read_usdat(datfile, nEquil):
-    """read usdat
+    """ read usdat
     """
     with open(datfile, 'r') as reader:
         lines = reader.readlines()
-    lines = [line.strip().split() for line in lines \
-            if not line.startswith('#')]
+    lines = [
+        line.strip().split() for line in lines 
+        if not line.startswith('#')
+    ]
 
     data = np.array(lines, dtype='float')[nEquil:, 1]
 
@@ -56,16 +60,16 @@ def plot_bins(metadata, nBins, nEquil):
 
     frames = []
     for datfile in datfiles:
-        data = read_usdat(datfile, nEquil)
-        n, bins, patches = ax.hist(data, bins=nBins, alpha=0.45)
-        bins = np.array(bins)
-        centres = (bins[1:] + bins[:-1])/2.
-        #print(n)
-        #print(bins)
-        ax.plot(centres,n,'k-',lw=2)
-        #print(patches[0].get_color())
+        if os.path.exists(datfile):
+            data = read_usdat(datfile, nEquil)
+            n, bins, patches = ax.hist(data, bins=nBins, alpha=0.45)
+            bins = np.array(bins)
+            centres = (bins[1:] + bins[:-1])/2.
+            ax.plot(centres,n,'k-',lw=2)
+            frames.append(data)
+        else:
+            print('Not exists %s' %datfile)
 
-        frames.append(data)
     frames = np.array(frames)
 
     content = '# hist\n'
