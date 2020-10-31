@@ -1,1 +1,1 @@
-grep "FORCES:" OUTCAR | tail -n 1
+grep "FORCES" OUTCAR | tail -n 1
