@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 import argparse
 
 import numpy as np
@@ -100,8 +101,10 @@ if __name__ == '__main__':
         for idx in range(args.numfiles):
             datList.append('fes_'+str(idx)+'.dat')
 
+    # check the CV dimensions
     cvDict, freeEnergies = read_fesdat(datList[0])
-    
+
+    # plot figure(s)
     if len(cvDict.keys()) == 1:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
         ax.set_title('MetaDynamics Convergence Analysis', \
@@ -115,13 +118,16 @@ if __name__ == '__main__':
             ax.plot(cvDict[0]['points']*10, freeEnergies, label=datFile)
         ax.legend()
     elif len(cvDict.keys()) == 2:
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
-        cn = ax.contour(cvDict[0]['points'], cvDict[1]['points'], freeEnergies) 
-            #levels=14, linewidth=0.5, color='k')
-        cntr = ax.contourf(cvDict[0]['points'], cvDict[1]['points'], freeEnergies, 
-            levels=12, cmap='RdBu')
-        fig.colorbar(cntr, ax=ax)
-        plt.clabel(cn, inline=True, fontsize=12)
+        for datFile in datList:
+            cvDict, freeEnergies = read_fesdat(datFile)
+            fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
+            cn = ax.contour(cvDict[0]['points'], cvDict[1]['points'], freeEnergies) 
+                #levels=14, linewidth=0.5, color='k')
+            cntr = ax.contourf(cvDict[0]['points'], cvDict[1]['points'], freeEnergies, 
+                levels=12, cmap='RdBu')
+            fig.colorbar(cntr, ax=ax)
+            plt.clabel(cn, inline=True, fontsize=12)
+            plt.savefig(os.path.splitext(os.path.basename(datFile))[0]+'.png')
     else:
         pass
 
