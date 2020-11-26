@@ -121,7 +121,7 @@ def run_calculation(
             atoms.set_calculator(
                 generate_calculator(
                     calculator, calc_command, calc_params, 
-                    'prefix'+'_'+str(jdx)+'_'+str(idx)
+                    prefix+'_'+str(jdx)+'_'+str(idx)
                     #'vasp_'+str(jdx)+'_'+str(atoms.info['step'])
                 )
             )
