@@ -133,9 +133,9 @@ def ani2arc(geo='POSCAR', ani='OUT.ANI', frame=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-gf", "--geoFile", default='geo_in.gen', \
-            help="VASP/DFTB+ Geometry File")
-    parser.add_argument("-xf", "--xyzFile", default='OUT.ANI', \
-            help="VASP ANI FORMAT FILE or DFTB+ XYZ FORMAT FILE")
+            help="DFTB+ Geometry File")
+    parser.add_argument("-xf", "--xyzFile", default='geo_end.xyz', \
+            help="DFTB+ XYZ FORMAT FILE")
     parser.add_argument("-s", "--select", help="select given frame")
 
     args = parser.parse_args()
