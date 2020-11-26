@@ -1,0 +1,15 @@
+#!/bin/bash
+filenames=`find $PWD -name OUTCAR`
+for filename in $filenames
+	do
+	energy=`grep 'energy  without entropy' $filename|sed -n '$p' |cut -b68-85`
+	force=`grep 'FORCES: max atom' $filename|sed -n '$p' |cut -b29-39`
+	fileName1=`dirname $filename`
+	fileName=`basename $fileName1`
+	if [ `echo $force "< 0.05" | bc ` -eq 1 ]
+	then
+		printf "%-25.23s\t%8.6f\t%8.4f\t \t%s\n" $fileName $energy $force $fileName1
+	else
+		printf "%-25.23s\t%8.6f\t%8.4f\t*\t%s\n" $fileName $energy $force $fileName1
+	fi
+	done

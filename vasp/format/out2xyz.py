@@ -14,6 +14,8 @@ sys.path.append(os.path.join(os.getenv("HOME"), \
         'repository/DailyScripts/common'))
 from coreXYZ import write_xyz
 
+import ase.units
+
 pi = np.pi
 
 norm = np.linalg.norm
@@ -32,7 +34,18 @@ convertion, positions will be adjusted according to the reference POSCAR.
 
 MAXFRAME = 100000 # maximum steps in outcar, this is a very large number for safe
 
+def wrap_frame_results():
+    return frame_results
+
 def read_outcar(outcar='OUTCAR',natoms=100,verbose=True,wdat=False,**kwargs):
+    """
+    in each frame,
+    coordinates, forces, stress will be read
+    """
+    # 
+    required_properties = ['positions', 'forces', 'energy', 'free_energy']
+    additional_properties = ['stress']
+
     # how many steps to read
     nframes = MAXFRAME
     if kwargs:
@@ -41,14 +54,23 @@ def read_outcar(outcar='OUTCAR',natoms=100,verbose=True,wdat=False,**kwargs):
                 nframes = int(kwargs['nframes'])
 
     # read OUTCAR
-    energy, free_energy = [], []
-
     frames = []
+    cur_results = {}
     fopen = open(outcar, 'r')
     count, flag = 0, True
-    if_en, if_pos = False, False
-    while flag:
+    while True:
         line = fopen.readline()
+        if line.strip().startswith('in kB'): # kB means kilobar equals 0.1 GPa
+            # XX YY ZZ XY YZ ZX
+            stress = -np.array([float(d) for d in line.strip().split()[2:]])
+            # vigot notation, XX YY ZZ YZ XZ XY
+            stress_vigot = stress[[0,1,2,4,5,3]]*1e-1*ase.units.GPa # in eV/AA^3
+            stress = []
+            for n in [0,5,4,5,1,3,4,3,2]:
+                stress.append(stress_vigot[n])
+            stress = np.array(stress).reshape(3,3)
+            cur_results['stress'] = stress
+            #print(stress)
         if line.startswith(' POSITION'):
             fopen.readline() # segment line ---...---
             poses, forces = [], []
@@ -58,27 +80,36 @@ def read_outcar(outcar='OUTCAR',natoms=100,verbose=True,wdat=False,**kwargs):
                 forces.append(data[3:]) # fx fy fz
             poses = np.array(poses, dtype=float)
             forces = np.array(forces, dtype=float)
-            frames.append((poses, forces))
-            if_pos = True
-            count += 1
+            cur_results['positions'] = poses
+            cur_results['forces'] = forces
         if line.strip().startswith('FREE ENERGIE OF THE ION-ELECTRON SYSTEM'):
             fopen.readline() # segment line ---...---
             # free energy F
             data = fopen.readline().strip().split()
-            free_energy.append(float(data[-2]))
+            free_energy = float(data[-2])
+            cur_results['free_energy'] = free_energy
             fopen.readline() # blank line
             # energy E0
             data = fopen.readline().strip().split()
-            energy.append(float(data[-1]))
-            if_en = True
+            energy = float(data[-1])
+            cur_results['energy'] = energy
+
+        # check if read one frame successfully 
+        for prop in required_properties:
+            if prop not in cur_results:
+                break
+        else:
+            count += 1
+            frames.append(cur_results)
+            cur_results = {}
 
         if line:
-            if if_en and if_pos:
-                if_en, if_pos = False, False
-                if count == nframes:
-                    flag = False
+            if count == nframes:
+                flag = False
+                break
         else:
             flag = False
+            break
             # raise ValueError('position and energy not ')
 
     fopen.close()
@@ -87,17 +118,17 @@ def read_outcar(outcar='OUTCAR',natoms=100,verbose=True,wdat=False,**kwargs):
         print('Successfully read OUTCAR, get positions and forces ...')
     
     # out datfile ?
-    if wdat:
-        for i, d in enumerate(data):
-            content = '#\n'
-            for j in range(nsteps):
-                pos, force = data[i][0][j], data[i][1][j]
-                content += ('{:<12.4f}'*6+'\n').format(*pos, *force)
-            with open('atom-'+str(i+1)+'.dat', 'w') as writer:
-                writer.write(content)
-            break
+    #if wdat:
+    #    for i, d in enumerate(data):
+    #        content = '#\n'
+    #        for j in range(nsteps):
+    #            pos, force = data[i][0][j], data[i][1][j]
+    #            content += ('{:<12.4f}'*6+'\n').format(*pos, *force)
+    #        with open('atom-'+str(i+1)+'.dat', 'w') as writer:
+    #            writer.write(content)
+    #        break
 
-    return frames, energy, free_energy
+    return frames
 
 def read_poscar(poscar='POSCAR',format='vasp5',verbose=True):
     """read POSCAR"""
@@ -182,23 +213,24 @@ def out2xyz(outcar='OUTCAR',poscar='POSCAR',descrp='vasp',\
         symbols.extend([s]*n)
 
     # read OUTCAR and write
-    frames, energy, free_energy = \
-            read_outcar(outcar=outcar,natoms=natoms,nframes=nframes)
+    frames = read_outcar(outcar=outcar,natoms=natoms,nframes=nframes)
 
     stride = 1
     content = ''
-    for i, (positions,forces) in enumerate(frames):
+    for i, results in enumerate(frames):
         #positions = adjust_coordinates(lattice,)
         if i%stride == 0:
             # TODO: coordinate system, be careful with forces
             #positions = 
             #print(energy[i])
-            content += write_xyz(symbols,positions,\
-                    forces=forces,\
-                    description=descrp,\
-                    step=i+1,\
-                    pbc=['T','T','T'],Lattice=lattice,\
-                    energy=energy[i],free_energy=free_energy[i])
+            #print(results['energy'])
+            results.update(symbols=symbols)
+            results.update(Lattice=lattice)
+            results.update(pbc=['T','T','T'])
+            results.update(step=i+1)
+            if 'stress' in results.keys():
+                results.update(virial=-results['stress']*vol)
+            content += write_xyz(**results)
 
     if not xyz_fname:
         xyz_fname = os.path.basename(os.getcwd()) + '-ref.xyz'

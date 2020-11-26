@@ -1,0 +1,8 @@
+#!/bin/bash
+ciftime=`date +"%Y%m%d"`
+cifseq=`grep E0 print-out | awk '{print $1}' | tail -n 1`
+$HOME/apps/vtstscripts-941/pos2cif.pl $1
+dirname=`pwd`
+cifname=${dirname##*/}
+mv $1.cif ${cifname}_${cifseq}_${ciftime}.cif
+sz ${cifname}_${cifseq}_${ciftime}.cif

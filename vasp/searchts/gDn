@@ -1,0 +1,40 @@
+#########################################################################
+# File Name: gDn.sh
+# Author: wdhu@59.78.92.45
+# Created Time: Mon 12 May 2014 10:54:44 AM CST
+#########################################################################
+#!/bin/bash
+if [ x$1 == x ]; then
+	outfile=OUTCAR
+else
+	outfile=$1
+fi
+if [ ! -f $outfile ];then
+	echo "usage: gDn [OUTCAR] (default) "
+	#echo "$outfile is not a OUTCAR file"
+	exit 0
+fi
+grep RMS $outfile|uniq > tempForce
+grep "distance after opt" $outfile > tempdisa
+grep "distance i" $outfile | uniq -c > tempdis
+step=0
+disa=0
+i=0
+for gap in `cat tempdis | awk '{print $1}'`
+do
+	let "i = $i + 1"
+	let "step = $step + $gap "
+	let "disa = $disa + $gap"
+	Force=`sed -n ''$step''p tempForce | awk '{print $5}'`
+	dist=`sed -n ''$i''p tempdis | awk -F "           " '{print $1}'`
+	dist2=`sed -n ''$i''p tempdis | awk -F "           " '{print $2}'`
+	disao=`sed -n ''$step''p tempdisa | awk '{print $4 }'`
+	echo -n "$dist: "
+	echo -ne "\033[33m$dist2"
+	echo -ne "\033[0m   Last Force:    "
+	echo -ne "\033[32m$Force"
+	echo -ne "\033[0m   distance after opt:    "
+	echo -e "\033[32m$disao "
+	echo -ne "\033[0m"
+done
+rm -f temp*

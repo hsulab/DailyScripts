@@ -1,0 +1,57 @@
+#!/bin/bash
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
+# Author: jyxu
+# Description:
+#   An extended version of qstat on Thomas. 
+#   More detailed is exhibited.
+# Notes:
+#   Due to shell efficiency, the output may take a while.
+# ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
+
+tmpfile="qst_tmp"
+ntask=$(($(qstat | wc -l) - 2))
+echo "There are $ntask tasks in total." > $tmpfile
+
+cwds=()
+count=0
+printf "%-10s%-20s%-10s%-10s%-10s%-10s%-20s%-40s\n" Num Name Queue State Prior Cores Time CWD >> $tmpfile
+for task in `qstat | tail -n $ntask | awk '{print $1"::"$2"::"$5"::"$6"-"$7"::"$9}'`
+do 
+    #echo $task
+    # info from qstat
+    tnumb=$(echo $task | awk -F  "::" '{print $1}') # job number
+    prior=$(echo $task | awk -F "::" '{print $2}') # job priority
+    state=$(echo $task | awk -F "::" '{print $3}') # queue state
+    stime=$(echo $task | awk -F "::" '{print $4}') # sub/start time
+
+    # info from qstat -j $task
+    name=$(qstat -j $tnumb | grep "job_name")
+    name=${name##* }
+    project=$(qstat -j $tnumb | grep "project")
+    project=${project##* }
+    cwd=$(qstat -j $tnumb | grep "cwd")
+    cwd=${cwd#* }
+    cores=$(qstat -j $tnumb | grep "range")
+    cores=${cores##* }
+    #printf "%-10s%-20s%-10s%-10s%-10s%-10s%-10s%-40s\n" Num Name Queue State Prior Cores Time CWD
+    printf "%-10s%-20s%-10s%-10s%-10s%-10s%-20s%-40s\n" $tnumb $name $project $state $prior $cores $stime $cwd >> $tmpfile
+    ((count ++))
+    #cwds+=$cwd
+    cwds[$count]=$cwd
+done
+#echo ${cwds[@]}
+
+if [ $# -eq 1 ]
+then 
+    if [ $1 == '-h' ]
+    then
+        echo "qst.sh jobnum(optional)"
+    #elif [ $1 -le $ntask -a $1 -ge $ntask ]
+    else
+        echo ${cwds[$1]} 
+    fi
+else
+    cat $tmpfile
+fi
+
+rm $tmpfile

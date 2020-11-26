@@ -1,0 +1,62 @@
+#!/bin/bash
+#PBS -N bulk
+#PBS -r n 
+#PBS -j oe 
+#PBS -l walltime=72:00:00
+#PBS -l nodes=2:ppn=6
+#PBS -q bigmem
+
+# go to work dir
+cd $PBS_O_WORKDIR
+# The program we want to execute (modify to suit your setup)
+EXEC=/data/apps/vasp/5.3.5/vasp-TS
+
+# setup mpd env (Of course use some other secret word than "dfadfs")
+if [ ! -f ~/.mpd.conf ]; then
+/bin/echo "secretword=dfadfs" >> ~/.mpd.conf
+/bin/chmod 600 ~/.mpd.conf
+fi
+
+##########################################################
+# The following should be no need to
+#       change any of these settings for normal use.
+##########################################################
+
+# setup Nums of Processor
+NP=`cat $PBS_NODEFILE|wc -l`
+echo "Numbers of Processors:  $NP"
+echo "---------------------------"
+echo `date`
+cat $PBS_NODEFILE | uniq
+
+# setup mpi env (em64t)
+export OMP_NUM_THREADS=1
+#export P4_GLOBMEMSIZE=1073741824
+export I_MPI_PIN_DOMAIN=auto
+export MPD_CON_EXT=$PBS_JOBID
+
+#v=$(echo "scale=7;114.634/ c_location^3 "| bc) 
+cat >> comment << !
+2 (1= energy in Ry, 2= energy in eV, 3= energy in hartree)
+v (= CONVERSION FACTOR FROM A**3 TO THE VOLUME OF UNIT CELL [0.25, 0.5, 1.0])
+4.9 6.7 2 (= amin amax # mesh points, it's just written out, not useful)
+11 (= number of data points)
+!
+for i in i_range_location 
+do
+a=$(echo "scale=15;$i/i_location* a_location "| bc)
+b=$(echo "scale=15;$i/i_location*b_location "| bc) 
+c=$(echo "scale=15;$i/i_location*c_location "| bc)
+cat > POSCAR << !
+POSCAR_location
+!
+# running program
+mpirun -r ssh -genv I_MPI_FABRICS shm:dapl -n $NP $EXEC 2>&1 > print-out
+E=$(grep F OSZICAR | tail -1 | awk '{print $5}')
+echo $c $E >> comment
+done
+/data/apps/vasp/murn-am < comment > lattice
+# clean
+
+echo `date` >> $HOME/finish
+echo `pwd` >>  $HOME/finish

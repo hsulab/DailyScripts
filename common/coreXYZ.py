@@ -9,8 +9,19 @@ import ase.io
 from ase import Atoms, Atom
 
 
-def write_xyz(symbols,positions,**kwargs):
+def write_xyz(*args,**kwargs):
     """positions in cartesian (AA) and forces in eV/AA"""
+    # symbols and positions are required
+    if 'symbols' in kwargs.keys():
+        symbols = kwargs['symbols']
+    else:
+        raise ValueError('symbols is a required key.')
+
+    if 'positions' in kwargs.keys():
+        positions = kwargs['positions']
+    else:
+        raise ValueError('positions is a required key.')
+
     # check number of atoms
     natoms = len(symbols)
 
@@ -39,9 +50,10 @@ def write_xyz(symbols,positions,**kwargs):
                     # list of float properties
                     value = list(np.array(value,dtype=float).ravel())
                     if len(value) != 9:
-                        raise ValueError('Lattice/stress/virial must have 9 components.')
-                    comment_content += ("{:<s}="+"\""+"{:<.4f} "*len(value)+"\""+" ") \
-                            .format(key,*value)
+                        raise ValueError(\
+                                'Lattice/stress/virial must have 9 components.')
+                    comment_content += ("{:<s}="+"\""+"{:<.4f} "*len(value)+"\""+\
+                            " ").format(key,*value)
                 elif key in ['pbc']:
                     # list of strings
                     comment_content += ("{:<s}="+"\""+"{:<s} "*len(value)+"\""+" ") \

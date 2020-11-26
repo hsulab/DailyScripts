@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# be careful with the difference between vasp4 and vasp5
+
+if [ $# -eq 0 ];then
+  nstart=`grep -n "STEP =" OUT.ANI  | tail -1 | awk -F: '{ print $1+1}'`
+  Ns=`grep -n "STEP =" OUT.ANI  | wc -l`
+else
+  nstart=`grep -n "STEP =" OUT.ANI  | grep -w " $1" | tail -1 | awk -F: '{ print $1+1}'`
+  Ns=$1
+  if [ -z "$nstart" ];then
+    nstart=`grep -n "STEP =" OUT.ANI  | tail -1 | awk -F: '{ print $1+1}'`
+    Ns=`grep "STEP =" OUT.ANI  | grep -n "STEP =" | tail -1 | awk -F: '{ print $1+1}'`
+  fi
+fi
+natom=$(sed -n ''$((nstart-2))'p' OUT.ANI | awk '{printf $1}')
+nend=$((nstart+natom-1))
+sed -n '3,5'p POSCAR | awk '{printf "%22.16f %22.16f %22.16f \n",$1,$2,$3}' > latticeM
+nlines=8
+sed -n $((nlines+1)),$((natom+nlines))'p' POSCAR | awk '{printf "%8s %8s %8s \n",$4,$5,$6}' > tempMFT # get TFs 
+
+a1=`sed -n '1p' latticeM`
+a2=`sed -n '2p' latticeM`
+a3=`sed -n '3p' latticeM`
+echo -e "`echo $a1 | awk '{print $1 }'` `echo $a2 | awk '{print $2 }'` `echo $a3 | awk '{print $3 }'`"  >tempM1
+echo -e "`echo $a1 | awk '{print $2 }'` `echo $a2 | awk '{print $3 }'` `echo $a3 | awk '{print $1 }'`" >>tempM1
+echo -e "`echo $a1 | awk '{print $3 }'` `echo $a2 | awk '{print $1 }'` `echo $a3 | awk '{print $2 }'`" >>tempM1
+echo -e "`echo $a1 | awk '{print $1 }'` `echo $a2 | awk '{print $3 }'` `echo $a3 | awk '{print $2 }'`" >>tempM1
+echo -e "`echo $a1 | awk '{print $2 }'` `echo $a2 | awk '{print $1 }'` `echo $a3 | awk '{print $3 }'`" >>tempM1
+echo -e "`echo $a1 | awk '{print $3 }'` `echo $a2 | awk '{print $2 }'` `echo $a3 | awk '{print $1 }'`" >>tempM1
+det=`awk '{printf "%22.16f", $1*$2*$3 }' tempM1 |awk '{printf "%.16f", $1+$2+$3+$4+$5+$6 }'`
+echo -e "$a2 $a3 \n$a3 $a1 \n$a1 $a2 " > tempM2
+awk '{printf "%22.16f %22.16f %22.16f ",($2*$6-$3*$5)/'$det',($3*$4-$1*$6)/'$det',($1*$5-$2*$4)/'$det'}' tempM2 >  tempM3
+M11=` awk '{print $1 }' tempM3`
+M12=` awk '{print $2 }' tempM3`
+M13=` awk '{print $3 }' tempM3`
+M21=` awk '{print $4 }' tempM3`
+M22=` awk '{print $5 }' tempM3`
+M23=` awk '{print $6 }' tempM3`
+M31=` awk '{print $7 }' tempM3`
+M32=` awk '{print $8 }' tempM3`
+M33=` awk '{print $9 }' tempM3`
+
+sed -n '1,'${nlines}'p' POSCAR > CONTCAR_$Ns
+sed -n ''$nstart','$nend'p' OUT.ANI | awk '{printf "%22.16f %22.16f %22.16f\n",'$M11'*$2+'$M12'*$3+'$M13'*$4,\
+  '$M21'*$2+'$M22'*$3+'$M23'*$4,'$M31'*$2+'$M32'*$3+'$M33'*$4}' > tempMC
+paste -d" " tempMC tempMFT |  awk '{printf "%22.16f %22.16f %22.16f %8s %8s %8s \n",$1,$2,$3,$4,$5,$6}' >> CONTCAR_$Ns
+
+echo "sucessfully create CONTCAR_$Ns"
+rm -f tempM* latticeM
