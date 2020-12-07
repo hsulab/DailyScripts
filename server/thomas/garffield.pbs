@@ -1,0 +1,33 @@
+#!/bin/bash -l
+
+# 1. Force bash as the executing shell.
+#$ -S /bin/bash
+
+# 2. Request time of wallclocl time (format hours:minutes:seconds).
+#$ -l h_rt=1:00:00
+
+# 3. Request 1 gigabyte of RAM per process (nust be an integer).
+#$ -l mem=1G
+
+# 4. Request 10 gigabyte of TMPDIR space per node (default is 10 GB).
+#$ -l tmpfs=10G
+
+# 5. Set the name of the job.
+#$ -N MD-Test
+
+# 6. Select the MPI parallel environment and number of processes.
+#$ -pe mpi 24
+
+# 7. Set the working directory.
+#$ -cwd
+
+#add to QUB_C
+#$ -P Test
+#$ -A QUB_chem
+
+# 8. Run the MPI job, gerun is a wrapper on Thomas.
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+
+gerun $HOME/apps/garffield_mpi geo ffield.reax trainset.in params 2>&1 > print-out
+
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished

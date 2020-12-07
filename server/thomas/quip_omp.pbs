@@ -1,0 +1,33 @@
+#!/bin/bash -l
+
+# 1. Force bash as the executing shell.
+#$ -S /bin/bash
+
+# 2. Request time of wallclocl time (format hours:minutes:seconds).
+#$ -l h_rt=0:15:00
+
+# 3. Request 1 gigabyte of RAM per process (nust be an integer).
+#$ -l mem=1G
+
+# 4. Request 10 gigabyte of TMPDIR space per node (default is 10 GB).
+#$ -l tmpfs=10G
+
+# 5. Set the name of the job.
+#$ -N quip-gapfit
+
+# 6. Select the MPI parallel environment and number of processes.
+#$ -pe mpi 24
+
+# 7. Set the working directory.
+#$ -cwd
+
+#add to QUB_C
+#$ -P Gold
+#$ -A QUB_chem
+
+export OMP_NUM_THREADS=24
+
+# 8. Run the MPI job, gerun is a wrapper on Thomas.
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+bash ./train.sh 2&>1 > gapfit.out
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished

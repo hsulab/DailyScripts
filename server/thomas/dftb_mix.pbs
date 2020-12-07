@@ -1,0 +1,36 @@
+#!/bin/bash -l
+
+# 1. Force bash as the executing shell.
+#$ -S /bin/bash
+
+# 2. Request time of wallclocl time (format hours:minutes:seconds).
+#$ -l h_rt=6:00:00
+
+# 3. Request 1 gigabyte of RAM per process (nust be an integer).
+#$ -l mem=1G
+
+# 4. Request 10 gigabyte of TMPDIR space per node (default is 10 GB).
+#$ -l tmpfs=10G
+
+# 5. Set the name of the job.
+#$ -N dftb_samples
+
+# 6. Select the MPI parallel environment and number of processes.
+#$ -pe mpi 24
+
+# 7. Set the working directory.
+#$ -cwd
+
+#add to QUB_C
+#$ -P Gold
+#$ -A QUB_chem
+
+export OMP_NUM_THREADS=$(ppn)
+
+# 8. Run the MPI job, gerun is a wrapper on Thomas.
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+
+EXEC="/home/mmm0586/apps/dftbplus/release/master/install/bin/dftb+"
+gerun $EXEC 2>&1 > dftb.out
+
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished
