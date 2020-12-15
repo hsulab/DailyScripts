@@ -1,0 +1,31 @@
+#!/bin/bash -l
+
+# Batch script to run an MPI parallel job under SGE with Intel MPI.
+
+# Request ten minutes of wallclock time (format hours:minutes:seconds).
+#$ -l h_rt=48:00:00
+
+# Request 1 gigabyte of RAM per process (must be an integer followed by M, G, or T)
+#$ -l mem=1G
+
+# Set the name of the job.
+#$ -N cmt-3
+
+# Select the MPI parallel environment.
+# It must be the integer multiple of 40 and often uses 2-5 nodes for a job 
+#$ -pe mpi 40
+
+# Set the working directory to somewhere in your scratch space.
+#$ -cwd 
+
+#add to QUB_C
+#$ -P Gold
+#$ -A QUB_chem
+
+# modules and envs 
+source ~/envs/source_plumed2.sh
+
+# Run our MPI job.  GERun is a wrapper that launches MPI jobs on our clusters.
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+gerun /home/mmm0586/apps/vasp/installed/5.4.4-PLUMED/vasp_gam 2>&1 > vasp.out
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished
