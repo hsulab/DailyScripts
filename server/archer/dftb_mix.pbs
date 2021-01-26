@@ -1,0 +1,42 @@
+#!/bin/bash --login
+
+# PBS job options (name, compute nodes, job time)
+
+# PBS -N is the job name (e.g. Example_OMP_Job)
+#PBS -N dftb-example-mix
+
+# PBS -l select is the number of nodes requested (e.g. 1 node=24 cores)
+#PBS -l select=1
+
+# PBS -l walltime, maximum walltime allowed (e.g. 12 hours)
+#PBS -l walltime=12:00:00
+
+# Replace [budget code] below with your project code (e.g. t01)
+#PBS -A e89-qub_c
+
+# Make sure any symbolic links are resolved to absolute path
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)               
+
+# Change to the direcotry that the job was submitted from
+# (remember this should be on the /work filesystem)
+cd $PBS_O_WORKDIR
+
+# for intel compiled code
+export KMP_AFFINITY=disabled
+
+# Set the number of threads to 12
+export OMP_NUM_THREADS=12 # the maximum for a single NUMA region
+
+# thread safety: single, funneled, serialized, multiple
+# export MPICH_MAX_THREAD_SAFETY=single # use default
+
+EXEC=/work/e89/e89/jyxu/apps/dftbplus/19.1/intel-2017/_install/bin/dftb+
+
+# Launch the parallel job
+#   Using n = N*node MPI processes
+#   N MPI processes per node
+#   S = 12/d MPI processes per NUMA region
+#   d OpenMP threads per MPI process
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+aprun -cc none -n 2 -N 2 -S 1 -d 12 $EXEC 2>&1 > print-out
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished

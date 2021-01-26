@@ -1,0 +1,20 @@
+#!/bin/bash --login
+#PBS -N Pt_COO_spc
+#PBS -j oe
+
+# Select nodes (maximum of 3072 cores)
+#PBS -l select=4
+#PBS -l walltime=24:00:00
+
+# Replace this with your budget code
+#PBS -A e89-qub_c
+
+# Move to directory that script was submitted from
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+cd $PBS_O_WORKDIR
+
+EXEC=/home/e89/e89/peijun/bin/vasp.5.4.1-TS/vasp_std
+
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+aprun -n 96 $EXEC 2>&1 > print-out
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished

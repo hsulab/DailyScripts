@@ -1,0 +1,33 @@
+#!/bin/bash --login
+#PBS -N Pt_COO_spc
+#PBS -j oe
+
+# Select nodes (maximum of 3072 cores)
+#PBS -l select=4
+#PBS -l walltime=12:00:00
+
+# Replace this with your budget code
+#PBS -A e89-qub_c
+
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+# Move to directory that script was submitted from
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+cd $PBS_O_WORKDIR
+
+EXEC=/home/e89/e89/peijun/bin/vasp.5.4.1-TS/vasp_std
+
+echo "C-Pt bond for CO adsorbed Pt surface" > print-out
+for poscar in `ls CO_C-Pt`
+do
+    cp CO_C-Pt/$poscar POSCAR
+    name=${poscar##*_}
+    dis=$((name/100))
+    printf "1\n3\n\n6\n4\n0.04\n1   17  %.4f\n" $dis > fort.188
+    echo "Run CBD for $poscar" >> print-out
+    aprun -n 96 $EXEC 2>&1 >> print-out
+    echo "" >> print-out
+    cp OUTCAR OUTCARs/OUTCAR_$name
+    cp CONTCAR CONTCARs/CONTCAR_$name
+done
+
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished
