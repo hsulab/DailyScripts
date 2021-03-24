@@ -28,7 +28,13 @@ else:
 
 _logger = logging.getLogger("vaspy.script")
 
-POTDIR = r'/home/mmm0586/apps/vasp/pot/potpaw_PBE/'
+
+pp_path = "/mnt/scratch/chemistry-apps/dkb01416/vasp/PseudoPotential/potpaw_PBE/"
+#if 'VASP_PP_PATH' in os.environ.keys():
+#    os.environ.pop('VASP_PP_PATH')
+#os.environ['VASP_PP_PATH'] = pp_path
+#POTDIR = r'/home/mmm0586/apps/vasp/pot/potpaw_PBE/'
+POTDIR = pp_path
 PBSSCRIPT = r'vasp.script'
 
 
@@ -92,7 +98,8 @@ def create_potcar(xsd):
 
     for elem in xsd.atom_types:
         if os.path.exists(potdir + elem):
-            potcar = potdir + elem + '/POTCAR_' + elem
+            #potcar = potdir + elem + '/POTCAR_' + elem
+            potcar = potdir + elem + '/POTCAR'
         else:
             print('No POTCAR for ' + elem)
             sys.exit(1)
