@@ -1,0 +1,37 @@
+#!/bin/bash --login
+#PBS -N Pt_COO_spc
+#PBS -j oe
+
+# Select nodes (maximum of 3072 cores)
+#PBS -l select=2
+#PBS -l walltime=3:00:00
+
+# Replace this with your budget code
+#PBS -A e89-qub_c
+
+# Move to directory that script was submitted from
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/submitted
+
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+cd $PBS_O_WORKDIR
+
+EXEC=/home/e89/e89/peijun/bin/vasp.5.4.1-TS/vasp_gam
+
+echo "C-O Bond in CO molecule" > print-out
+echo "#  num  energy" > energy_data
+for i in `ls CO_POSCARs`
+do 
+    # copy POSCAR and run vasp
+    poscar='CO_POSCARs/'$i
+    cp $poscar POSCAR
+    aprun -n 48 $EXEC 2>&1 >> print-out
+    echo "     "  >> print-out
+
+    # get energy
+    energy=$(grep "sigma->" OUTCAR | tail -n 1)
+    energy=${energy##*=}
+
+    printf "  %s  %12.4f\n" $i $energy >> energy_data
+done
+
+echo `date "+%Y-%m-%d %H:%M:%S"` `pwd` >> $HOME/finished
