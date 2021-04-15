@@ -1,0 +1,43 @@
+# Created by VASPy
+# GENERAL
+  SYSTEM        =  suf-2x2-vdw               # system name
+  NWRITE        =  2                         # verbosity flag, 0|1|*2|3|4
+  ISTART        =  0                         # 0 New | 1 Restart
+
+# WRITING
+  LCHARG        =  .FALSE.                   # if write CHGCAR
+  LWAVE         =  .FALSE.                   # if write WAVECAR
+
+# PARALLEL
+  NPAR          =  6                         # NCORE=ncores/NPAR
+
+# ELECTRONIC
+  ENCUT         =  400                       # energy cutoff
+  PREC          =  Normal                    # precision
+  EDIFF         =  1.0E-5                    # stopping criterion for electronic updates
+  NELM          =  180                       # maximium number of ionic updates
+  NELMIN        =  6                         # minimium number of ionic updates
+
+# MAGNETIC
+  ISPIN         =  2                         # *1 no | 2 yes
+
+# SMEARING
+  ISMEAR        =  1                         # -5 DOS | 0 large cell | 1 metal
+  SIGMA         =  0.2                       # smearing parameter
+
+# ALGO
+  ALGO          =  Fast                      # algorithms for electronic self-consistent
+  LREAL         =  Auto                      # if calculation done in real spcae
+  ISYM          =  0                         # 0 off | 1 on | 2 charge | 3 no charge
+
+# IONIC
+  EDIFFG        =  -0.02                     # stopping criterion for ionic updates
+  NSW           =  1000                      # number of steps for ionic updates
+  IBRION        =  2                         # 0 MD | 1 quasi-Newton | 2 CG | 3 damped-MD | 5 FC
+  ISIF          =  2                         # 0 MD | *2 | 3 lat opt
+  POTIM         =  0.1                       # ionic step size / MD time step
+
+# vdW-DF
+  GGA = RE
+  LUSE_VDW = .TRUE.
+  AGGAC = 0.0000
