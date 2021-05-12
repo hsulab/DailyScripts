@@ -8,7 +8,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-import pyblock as pb
+#import pyblock as pb
 
 import matplotlib as mpl
 mpl.use('Agg') #silent mode
@@ -384,27 +384,29 @@ def plot_bmdata(data, cols):
 
     return
 
-def block_average(data, cols, ndrop):
-    lambs = data[1]
-    dim = lambs.shape
-
-    for col in cols:
-        if col > dim[1]:
-            raise ValueError('Not so many constraints.')
-        data = pd.Series(lambs[ndrop:,col-1].ravel())
-
-        (data_length, reblock_data, covariance) = pb.pd_utils.reblock(data)
-        block_info = reblock_data
-
-        data_sets = block_info.columns.get_level_values(0).unique()
-        for i, ci in enumerate(data_sets):
-            opt = block_info[block_info[(ci,'optimal block')] != ''].index.values
-            if opt:
-                opt_mean = block_info.loc[opt[0],(ci,'mean')]
-                print('BM-%d %5d/%5d MEAN %.4f' %(col,ndrop,len(data),opt_mean))
-                break
-        else:
-            print('No opt...')
+#def block_average(data, cols, ndrop):
+#    lambs = data[1]
+#    dim = lambs.shape
+#
+#    for col in cols:
+#        if col > dim[1]:
+#            raise ValueError('Not so many constraints.')
+#        data = pd.Series(lambs[ndrop:,col-1].ravel())
+#
+#        (data_length, reblock_data, covariance) = pb.pd_utils.reblock(data)
+#        block_info = reblock_data
+#
+#        data_sets = block_info.columns.get_level_values(0).unique()
+#        for i, ci in enumerate(data_sets):
+#            opt = block_info[block_info[(ci,'optimal block')] != ''].index.values
+#            if opt:
+#                opt_mean = block_info.loc[opt[0],(ci,'mean')]
+#                print('BM-%d %5d/%5d MEAN %.4f' %(col,ndrop,len(data),opt_mean))
+#                break
+#        else:
+#            print('No opt...')
+#
+#    return 
 
 
 if __name__ == '__main__':
@@ -444,7 +446,8 @@ if __name__ == '__main__':
             elif ftype == 'BM':
                 plot_bmdata(data, args.para)
                 if args.ndrop != -1:
-                    block_average(data, args.para, args.ndrop)
+                    # block_average(data, args.para, args.ndrop)
+                    raise NotImplementedError('block average not supported')
             print('plot the p-th collective variable.')
     elif args.meta:
         print('Read METADATA ...')
