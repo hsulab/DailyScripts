@@ -36,8 +36,15 @@ if __name__ == '__main__':
     )
     data = np.loadtxt(args.lcurve)
 
-    fig, axarr = plt.subplots(nrows=3, ncols=1, figsize=(16,12))
+    fig, axarr = plt.subplots(nrows=3, ncols=1, figsize=(16,16))
     axarr = axarr.flatten()
+
+    LAYOUT =dict(
+        left=0.05, right=0.95, 
+        bottom=0.05, top=0.95, 
+        wspace=0.10,hspace=0.20
+    )
+    plt.subplots_adjust(**LAYOUT)
 
     ax = axarr[0]
     ax.set_title(
@@ -54,7 +61,8 @@ if __name__ == '__main__':
     ax.plot(data[si:,0], data[si:,3], label='Energy Loss')
     ax.plot(data[si:,0], data[si:,5], label='Force Loss')
 
-    ax.legend()
+    ax.legend(fontsize=24)
+    ax.set_yscale('log')
 
     ax = axarr[1]
     ax.set_title(
@@ -71,11 +79,13 @@ if __name__ == '__main__':
     ax.plot(data[si:,0], data[si:,4], label='Energy Loss')
     ax.plot(data[si:,0], data[si:,6], label='Force Loss')
 
-    ax.legend()
+    ax.legend(fontsize=24)
+    ax.set_yscale('log')
 
     ax = axarr[2]
     ax.plot(data[si:,0], data[si:,1], label='Total Test Loss')
     ax.plot(data[si:,0], data[si:,2], label='Total Train Loss')
-    ax.legend()
+    ax.legend(fontsize=24)
+    ax.set_yscale('log')
 
     plt.savefig('curve.png')
