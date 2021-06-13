@@ -7,6 +7,8 @@ import argparse
 
 import numpy as np 
 
+from joblib import Parallel, delayed
+
 RAW_TO_SET='/users/40247882/projects/ucdp/copper/utils/raw_to_set.sh'
 
 def run_command(command, cwd, timeout=120):
@@ -33,6 +35,10 @@ if __name__ == '__main__':
         '-ns', '--nsets', type=int, 
         default=5, help='chemical symbol'
     )
+    parser.add_argument(
+        '-nj', '--njobs', type=int,
+        default=4, help='number of processes'
+    )
 
     args = parser.parse_args()
 
@@ -45,6 +51,7 @@ if __name__ == '__main__':
     with open('raw.log','w') as fopen:
         fopen.write('')
 
+    commands = []
     for dname in raw_dirs:
         content = 'System %s\n' %dname
         # number of frames 
@@ -56,13 +63,18 @@ if __name__ == '__main__':
         n_per_set = int(n_per_set)
         content += 'nframes %d\n' %nframes
         content += 'nframe per set %d\n' %n_per_set
-        # raw to set
+        ## raw to set
         cur_mand = RAW_TO_SET + ' %d' %n_per_set
+        commands.append(cur_mand)
         proc = run_command(cur_mand, dname)
         content += ''.join(proc.stdout.readlines())
         content += '\n\n' 
         print(content)
         with open('raw.log','a') as fopen:
             fopen.write(content)
+
+    #print('now actual run...')
+    #print('using num of jobs: ', args.njobs)
+    #Parallel(n_jobs=args.njobs)(delayed(run_command)(cur_mand, dname) for dname, cur_mand in zip(raw_dirs, commands))
 
     pass

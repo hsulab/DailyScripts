@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+import json
 import argparse
+
+from collections import Counter
 
 from ase.io import read, write
 
@@ -13,10 +17,22 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-df', '--datafile', 
-        default='bias', help='time series files'
+        default='data.xyz', help='time series files'
+    )
+    parser.add_argument(
+        '-ej', '--enjson', 
+        default='e0.json', help='json file with single atom energies'
     )
 
     args = parser.parse_args()
+
+    # 
+    substract_baseline = False
+    if os.path.exists(args.enjson):
+        substract_baseline = True
+        with open(args.enjson, 'r') as fopen:
+            e0_dict = json.load(fopen)
+
     # sanity check, dpdata only needs species, pos, Z, force, virial 
     # ase-extxyz is inconsistent with quip-xyz, especially the force 
     frames = read(args.datafile, ':')
@@ -36,8 +52,10 @@ if __name__ == '__main__':
         # del atoms.info['feature_vector']
         # TODO: check if calculator exists 
         atoms.calc = None # ase copys xyz info to SinglePointCalculator?
-        atoms.arrays['force'] = atoms.arrays['forces'].copy()
-        del atoms.arrays['forces']
+        stored_forces = atoms.arrays.get('forces', None)
+        if stored_forces is not None:
+            atoms.arrays['force'] = stored_forces.copy()
+            del atoms.arrays['forces']
 
         # calc
         #cur_calc_props = list(atoms.calc.results.keys())
@@ -45,6 +63,17 @@ if __name__ == '__main__':
         #    if prop not in calc_props:
         #        del atoms.calc.results[prop]
         # move forces to force
+
+        # check e0
+        if substract_baseline:
+            chemical_symbols = atoms.get_chemical_symbols()
+            sym_dict = Counter(chemical_symbols)
+            tot_e0 = 0.0
+            for elem, num in sym_dict.items():
+                tot_e0 += num*e0_dict[elem]
+            atoms.info['energy'] -= tot_e0
+            #print(tot_e0)
+            #print(sym_dict)
 
     write('dp_raw.xyz', frames)
 

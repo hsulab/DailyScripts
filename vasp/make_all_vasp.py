@@ -151,12 +151,12 @@ def create_copt(atoms):
 
     return content
 
-def create_slurm(directory, partition='k2-medpri', ncpus='32'):
+def create_slurm(directory, partition='k2-hipri', time='3:00:00', ncpus='32'):
     """create job script"""
     content = "#!/bin/bash -l \n"
     content += "#SBATCH --partition=%s        # queue\n" %partition 
     content += "#SBATCH --job-name=%s         # Job name\n" %Path(directory).name 
-    content += "#SBATCH --time=24:00:00              # Time limit hrs:min:sec\n"
+    content += "#SBATCH --time=%s              # Time limit hrs:min:sec\n" %time 
     content += "#SBATCH --nodes=1-2                  # Number of nodes\n"
     content += "#SBATCH --ntasks=%s                  # Number of cores\n" %ncpus
     content += "#SBATCH --cpus-per-task=1            # Number of cores per MPI task \n"
@@ -323,10 +323,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Add optional argument.
-    parser.add_argument("-t", "--task", nargs='?', const='SC', help="set task type")
-    parser.add_argument("-k", "--kpoints", help="set k-points")
-    parser.add_argument("-q", "--queue", choices=('Gold', 'Test'), help="pbs queue type")
-    parser.add_argument("-n", "--ncpu", help="cpu number in total")
+    #parser.add_argument("-t", "--task", nargs='?', const='SC', help="set task type")
+    #parser.add_argument("-k", "--kpoints", help="set k-points")
+    #parser.add_argument("-q", "--queue", choices=('Gold', 'Test'), help="pbs queue type")
+    #parser.add_argument("-n", "--ncpu", help="cpu number in total")
 
     parser.add_argument(
         "-d", "--cwd", default="./", 
@@ -348,13 +348,17 @@ if __name__ == '__main__':
         "-s", "--sort", action='store_false', 
         help="sort atoms by elemental numbers and z-positions"
     )
+    parser.add_argument(
+        "--sub", action='store_true', 
+        help="submit the job after creating input files"
+    )
 
     args = parser.parse_args()
 
     # Add all possible arguments in INCAR file.
     struct_path = Path(args.file)
-    if struct_path.suffix != '.xsd': 
-        raise ValueError('only support xsd format now...')
+    #if struct_path.suffix != '.xsd': 
+    #    raise ValueError('only support xsd format now...')
 
     cwd = Path(args.cwd) 
     if cwd != Path.cwd(): 
@@ -365,8 +369,9 @@ if __name__ == '__main__':
     if directory.exists(): 
         raise ValueError('targeted directory exists.')
 
-    #atoms = xsd2.read_xsd(struct_path)
     atoms = read_xsd2(struct_path)
+    #atoms = read(struct_path)
+    #atoms.set_constraint(FixAtoms(indices=range(len(atoms))))
 
     # sort atoms by symbols and z-positions especially for supercells 
     if args.sort: 
@@ -384,7 +389,7 @@ if __name__ == '__main__':
     create_vasp_inputs(atoms, incar=args.incar, directory=directory)
 
     # submit job automatically 
-    if True: 
+    if args.sub: 
         command = 'sbatch vasp.slurm'
         proc = subprocess.Popen(
             command, shell=True, cwd=directory,
