@@ -88,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-v', '--vasp', 
         default='compute_by_ase.py', 
-        help='input structures stored in xyz format file'
+        help='python script for computation'
     )
     parser.add_argument(
         '-p', '--parameter', 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-n', '--nchunks', 
         default=1, type=int,
-        help='unsupported frame selection'
+        help='split into separate dirs'
     )
 
     args = parser.parse_args()
