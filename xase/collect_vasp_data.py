@@ -23,6 +23,10 @@ parser.add_argument(
     default='vasp_0_*', help='vasp directory name pattern'
 )
 parser.add_argument(
+    '-f', '--vaspfile', 
+    default='vasprun.xml', help='vasp directory name pattern'
+)
+parser.add_argument(
     '-nj', '--njobs', type=int,
     default=4, help='upper limit on number of directories'
 )
@@ -36,7 +40,7 @@ args = parser.parse_args()
 def find_vasp_dirs(wd):
     cur_vasp_dirs = []
     for p in wd.glob(args.pattern):
-        cur_vasp_dirs.append(str(p))
+        cur_vasp_dirs.append(p)
     print('find number of vasp dirs %d in %s' %(len(cur_vasp_dirs), wd))
 
     return cur_vasp_dirs
@@ -49,11 +53,13 @@ for p in d.parent.glob(d.name+'*'):
         vasp_dirs.extend(find_vasp_dirs(p))
 print('total vasp dirs: %d' %(len(vasp_dirs)))
 
-vasp_dirs_sorted = sorted(vasp_dirs, key=lambda k: int(k.split('_')[-1]))
+vasp_dirs_sorted = sorted(vasp_dirs, key=lambda k: int(k.name.split('_')[-1])) # sort by name
+print(vasp_dirs_sorted)
 
 def extract_atoms(p):
-    vasprun = Path(p) / 'vasprun.xml'
-    atoms = read(vasprun, format='vasp-xml')
+    vasprun = Path(p) / args.vaspfile
+    #atoms = read(vasprun, format='vasp-xml')
+    atoms = read(vasprun)
 
     return atoms
 
@@ -67,8 +73,9 @@ else:
     for idx, p in tqdm(enumerate(vasp_dirs_sorted)):
         if idx >= args.limit:
             break
-        vasprun = Path(p) / 'vasprun.xml'
-        atoms = read(vasprun, format='vasp-xml')
+        vasprun = Path(p) / args.vaspfile
+        #atoms = read(vasprun, format='vasp-xml')
+        atoms = read(vasprun)
         frames.append(atoms)
 
 et = time.time()
