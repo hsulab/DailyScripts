@@ -10,9 +10,6 @@ from ase.io import read, write
 
 from joblib import Parallel, delayed
 
-#d = Path('./PtO_200_500')
-#d = Path('./bPtO2_200_500')
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-d', '--dir', 
@@ -27,8 +24,12 @@ parser.add_argument(
     default='vasprun.xml', help='vasp directory name pattern'
 )
 parser.add_argument(
+    '-i', '--indices', default="-1", 
+    help="frame indices to read"
+)
+parser.add_argument(
     '-nj', '--njobs', type=int,
-    default=4, help='upper limit on number of directories'
+    default=1, help='upper limit on number of directories'
 )
 parser.add_argument(
     '-l', '--limit', type=int,
@@ -53,13 +54,15 @@ for p in d.parent.glob(d.name+'*'):
         vasp_dirs.extend(find_vasp_dirs(p))
 print('total vasp dirs: %d' %(len(vasp_dirs)))
 
+print("sorted by last integer number...")
 vasp_dirs_sorted = sorted(vasp_dirs, key=lambda k: int(k.name.split('_')[-1])) # sort by name
-print(vasp_dirs_sorted)
+#print(vasp_dirs_sorted)
 
 def extract_atoms(p):
     vasprun = Path(p) / args.vaspfile
     #atoms = read(vasprun, format='vasp-xml')
-    atoms = read(vasprun)
+    atoms = read(vasprun, args.indices)
+    #print(atoms)
 
     return atoms
 
@@ -67,7 +70,12 @@ st = time.time()
 
 if args.njobs > 1:
     print('using num of jobs: ', args.njobs)
-    frames = Parallel(n_jobs=args.njobs)(delayed(extract_atoms)(p) for p in vasp_dirs_sorted)
+    atoms = Parallel(n_jobs=args.njobs)(delayed(extract_atoms)(p) for p in vasp_dirs_sorted)
+    frames = []
+    if isinstance(atoms, list):
+        frames.extend(atoms)
+    else:
+        frames.append(atoms)
 else:
     frames = []
     for idx, p in tqdm(enumerate(vasp_dirs_sorted)):
@@ -75,12 +83,16 @@ else:
             break
         vasprun = Path(p) / args.vaspfile
         #atoms = read(vasprun, format='vasp-xml')
-        atoms = read(vasprun)
-        frames.append(atoms)
+        atoms = read(vasprun, args.indices)
+        if isinstance(atoms, list):
+            frames.extend(atoms)
+        else:
+            frames.append(atoms)
 
 et = time.time()
-print(et-st)
+print('cost time: ', et-st)
 
+print("Number of frames: ", len(frames))
 write(d.name+'_sorted.xyz', frames)
 
 if __name__ == '__main__':
