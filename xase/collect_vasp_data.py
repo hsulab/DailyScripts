@@ -7,8 +7,12 @@ from pathlib import Path
 
 from tqdm import tqdm
 from ase.io import read, write
+from ase.constraints import FixAtoms
 
 from joblib import Parallel, delayed
+
+import numpy as np
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -35,6 +39,10 @@ parser.add_argument(
     '-l', '--limit', type=int,
     default=10000, help='upper limit on number of directories'
 )
+parser.add_argument(
+    "--check", action="store_true",
+    help="check number of converged configurations"
+)
 
 args = parser.parse_args()
 
@@ -56,8 +64,7 @@ print('total vasp dirs: %d' %(len(vasp_dirs)))
 
 print("sorted by last integer number...")
 vasp_dirs_sorted = sorted(vasp_dirs, key=lambda k: int(k.name.split('_')[-1])) # sort by name
-#print(vasp_dirs_sorted)
-
+#print(vasp_dirs_sorted) 
 def extract_atoms(p):
     vasprun = Path(p) / args.vaspfile
     #atoms = read(vasprun, format='vasp-xml')
@@ -92,8 +99,23 @@ else:
 et = time.time()
 print('cost time: ', et-st)
 
-print("Number of frames: ", len(frames))
-write(d.name+'_sorted.xyz', frames)
+
+if len(frames) > 0:
+    if args.check:
+        nconverged = 0
+        for atoms in frames:
+            indices = [a.index for a in atoms if a.position[0]<1.5]
+            cons = FixAtoms(indices = indices)
+            atoms.set_constraint(cons)
+            forces = atoms.get_forces(apply_constraint=True)
+            maxforce = np.max(np.fabs(forces))
+            if maxforce < 0.05:
+                nconverged += 1
+        print("number of converged: ", nconverged)
+    print("Number of frames: ", len(frames))
+    write(d.name+'_sorted.xyz', frames)
+else:
+    print("No frames...")
 
 if __name__ == '__main__':
     pass
