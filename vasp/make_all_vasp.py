@@ -9,6 +9,8 @@ import subprocess
 
 import shutil 
 
+from collections import Counter 
+
 import xml.etree.ElementTree as ET
 from xml.dom import minidom 
 
@@ -19,7 +21,8 @@ import numpy as np
 from ase import Atoms 
 from ase.io import read, write
 from ase.io.vasp import write_vasp 
-from ase.calculators.vasp import Vasp2
+from ase.calculators.vasp import Vasp
+#from ase.calculators.vasp import Vasp2
 from ase.constraints import FixAtoms
 
 # customised xsd reader 
@@ -92,9 +95,9 @@ def read_xsd2(fd):
                     name = symbol + str(len(names)+1) # None due to copy atom 
                 names.append(name)
 
-                restriction = atom.get('RestrictedProperties')
+                restriction = atom.get('RestrictedProperties', None)
                 if restriction:
-                    if restriction == 'FractionalXYZ': 
+                    if restriction.startswith("FractionalXYZ"):  # TODO: may have 1-3 flags
                         restrictions.append(True)
                     else: 
                         raise ValueError('unknown RestrictedProperties')
@@ -157,7 +160,7 @@ def create_slurm(directory, partition='k2-hipri', time='3:00:00', ncpus='32'):
     content += "#SBATCH --partition=%s        # queue\n" %partition 
     content += "#SBATCH --job-name=%s         # Job name\n" %Path(directory).name 
     content += "#SBATCH --time=%s              # Time limit hrs:min:sec\n" %time 
-    content += "#SBATCH --nodes=1-2                  # Number of nodes\n"
+    content += "#SBATCH --nodes=1                    # Number of nodes\n"
     content += "#SBATCH --ntasks=%s                  # Number of cores\n" %ncpus
     content += "#SBATCH --cpus-per-task=1            # Number of cores per MPI task \n"
     content += "#SBATCH --mem=10G                    # Number of cores per MPI task \n"
@@ -196,7 +199,7 @@ def create_vasp_inputs(atoms, incar=None, directory='vasp-test'):
     os.environ[vdw_envname] = vdw_path
 
     # ===== initialise ===== 
-    calc = Vasp2(
+    calc = Vasp(
         command = "vasp_std", 
         directory = 'dummy',  
         **vasp_params, 
@@ -218,14 +221,18 @@ def create_vasp_inputs(atoms, incar=None, directory='vasp-test'):
     poscar = os.path.join(directory, 'POSCAR')
     write_vasp(poscar, atoms, direct=True, vasp5=True)
 
-    from collections import Counter 
-    cons = atoms.constraints
-    assert len(cons) == 1 
-    cons_indices = cons[0].get_indices() 
     symbols = atoms.get_chemical_symbols() 
     all_atoms = Counter(symbols) 
-    fixed_symbols = [symbols[i] for i in cons_indices]
-    fixed_atoms = Counter(fixed_symbols)
+    cons = atoms.constraints
+    print(cons)
+    if len(cons) == 1:
+        cons_indices = cons[0].get_indices() 
+        fixed_symbols = [symbols[i] for i in cons_indices]
+        fixed_atoms = Counter(fixed_symbols)
+    else:
+        fixed_atoms = all_atoms.copy()
+        for key in fixed_atoms.keys():
+            fixed_atoms[key] = 0
 
     natoms = len(atoms) 
     nfixed = np.sum(list(fixed_atoms.values()))
@@ -332,8 +339,14 @@ if __name__ == '__main__':
         "-d", "--cwd", default="./", 
         help="current working directory"
     )
-    parser.add_argument(
-        "-f", "--file", help="structure file in any format"
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "-f", "--file", default=None,
+        help="structure file in any format"
+    )
+    group.add_argument(
+        "-sd", "--stru_dir", default=None,
+        help="structure file in any format"
     )
     parser.add_argument(
         "-i", "--incar", 
@@ -355,51 +368,58 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Add all possible arguments in INCAR file.
-    struct_path = Path(args.file)
-    #if struct_path.suffix != '.xsd': 
-    #    raise ValueError('only support xsd format now...')
+    stru_files = []
+    if args.stru_dir is not None:
+        stru_dir = Path(args.stru_dir)
+        for p in stru_dir.glob("*.xsd"):
+            stru_files.append(p)
+        stru_files.sort()
+    if args.file is not None:
+        # Add all possible arguments in INCAR file.
+        struct_path = Path(args.file)
+        stru_files.append(struct_path)
+        #if struct_path.suffix != '.xsd': 
+        #    raise ValueError('only support xsd format now...')
 
     cwd = Path(args.cwd) 
-    if cwd != Path.cwd(): 
-        directory = cwd.resolve() / struct_path.stem
-    else:
-        directory = Path.cwd().resolve() / struct_path.stem
-    
-    if directory.exists(): 
-        raise ValueError('targeted directory exists.')
-
-    atoms = read_xsd2(struct_path)
-    #atoms = read(struct_path)
-    #atoms.set_constraint(FixAtoms(indices=range(len(atoms))))
-
-    # sort atoms by symbols and z-positions especially for supercells 
-    if args.sort: 
-        numbers = atoms.numbers 
-        zposes = atoms.positions[:,2].tolist()
-        sorted_indices = np.lexsort((zposes,numbers))
-        atoms = atoms[sorted_indices]
+    for struct_path in stru_files:
+        if cwd != Path.cwd(): 
+            directory = cwd.resolve() / struct_path.stem
+        else:
+            directory = Path.cwd().resolve() / struct_path.stem
         
-        map_indices = dict(zip(sorted_indices, range(len(atoms))))
-        copt = atoms.info.get('copt', None)
-        if copt: 
-            new_copt = [map_indices[key] for key in atoms.info['copt']]
-            atoms.info['copt'] = new_copt 
-    
-    create_vasp_inputs(atoms, incar=args.incar, directory=directory)
+        if directory.exists(): 
+            raise ValueError('targeted directory exists.')
 
-    # submit job automatically 
-    if args.sub: 
-        command = 'sbatch vasp.slurm'
-        proc = subprocess.Popen(
-            command, shell=True, cwd=directory,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            encoding = 'utf-8'
-        )
-        errorcode = proc.wait(timeout=120) # 10 seconds
-        if errorcode:
-            raise ValueError('Error in generating random cells.')
+        atoms = read_xsd2(struct_path)
+        #atoms.set_constraint(FixAtoms(indices=range(len(atoms))))
 
-        print(''.join(proc.stdout.readlines()))
+        # sort atoms by symbols and z-positions especially for supercells 
+        if args.sort: 
+            numbers = atoms.numbers 
+            zposes = atoms.positions[:,2].tolist()
+            sorted_indices = np.lexsort((zposes,numbers))
+            atoms = atoms[sorted_indices]
+            
+            map_indices = dict(zip(sorted_indices, range(len(atoms))))
+            copt = atoms.info.get('copt', None)
+            if copt: 
+                new_copt = [map_indices[key] for key in atoms.info['copt']]
+                atoms.info['copt'] = new_copt 
+        
+        create_vasp_inputs(atoms, incar=args.incar, directory=directory)
 
-    pass 
+        # submit job automatically 
+        if args.sub: 
+            command = 'sbatch vasp.slurm'
+            proc = subprocess.Popen(
+                command, shell=True, cwd=directory,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                encoding = 'utf-8'
+            )
+            errorcode = proc.wait(timeout=120) # 10 seconds
+            if errorcode:
+                raise ValueError('Error in submitting jobs...')
+
+            print(''.join(proc.stdout.readlines()))
+
