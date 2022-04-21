@@ -33,7 +33,7 @@ for nebdir in nebdirs:
             print(outcar)
             atoms = read(outcar, '-1')
             print("energy: ", atoms.get_potential_energy())
-            print("max force: ", np.max(np.fabs(atoms.get_forces())))
+            print("max force: ", np.max(np.fabs(atoms.get_forces(apply_constraint=True))))
         else:
             raise ValueError("outcar not found.")
     else:
@@ -42,7 +42,7 @@ for nebdir in nebdirs:
 
 assert len(frames) == len(nebdirs)
 #write("neb-"+vasp_file+".xyz", frames)
-write("neb.xyz", frames)
+write(Path.cwd().name+".xyz", frames)
 
 
 if __name__ == '__main__':

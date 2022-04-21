@@ -53,6 +53,8 @@ def read_outcar(outcar):
     varforces = np.var(force_arrays, axis=1)
     print(varforces.shape)
 
+    print("maxforce: ", maxforces)
+
     return energies, maxforces, varforces
 
 if __name__ == '__main__':
