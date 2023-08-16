@@ -7,43 +7,38 @@ import argparse
 import numpy as np
 
 import matplotlib
-matplotlib.use('Agg') #silent mode
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+plt.style.use("presentation")
+
+"""Command Line
+        plumed sum_hills --stride 100 --hills ../hills.dat --mintozero
+"""
 
 
 def read_fesdat(fesDat):
-    #with open(fesDat, 'r') as reader:
-    #    lines = reader.readlines()
+    """"""
+    fopen = open(fesDat, "r")
 
-    #data = np.array(
-    #    [
-    #        line.strip().split() 
-    #        for line in lines if not line.startswith('#!')
-    #    ], dtype=float
-    #)
-
-    fopen = open(fesDat, 'r')
-
+    # - parse fields...
     fields = fopen.readline().strip().split()
     ncolvar = int((len(fields) - 2) / 2.)
 
+    # - read statistics
     cvDict = {}
     for idx in range(ncolvar):
         cvDict[idx] = {}
         dataLines = []
         for jdx in range(4):
             dataLines.append(fopen.readline())
-        
-        cvDict[idx]['min'] = float(dataLines[0].strip().split()[-1])
-        cvDict[idx]['max'] = float(dataLines[1].strip().split()[-1])
-        cvDict[idx]['nbins'] = int(dataLines[2].strip().split()[-1])
-        cvDict[idx]['periodic'] = dataLines[3].strip().split()[-1]
 
-        print(cvDict[idx])
+        cvDict[idx]["min"] = float(dataLines[0].strip().split()[-1])
+        cvDict[idx]["max"] = float(dataLines[1].strip().split()[-1])
+        cvDict[idx]["nbins"] = int(dataLines[2].strip().split()[-1])
+        cvDict[idx]["periodic"] = dataLines[3].strip().split()[-1]
 
+    # - mark start point of the data
     dataLinePoint = fopen.tell()
-
-    #print(fopen.readline())
 
     # get grids
     lastNumBins = 0
@@ -79,7 +74,7 @@ def read_fesdat(fesDat):
             freeEnergies.append(curList)
             emptyLine = fopen.readline()
     else:
-        raise ValueError('cannot support number of CV larger than 2')
+        raise RuntimeError('cannot support number of CV larger than 2')
 
     freeEnergies = np.array(freeEnergies)
 
@@ -87,19 +82,33 @@ def read_fesdat(fesDat):
 
     return cvDict, freeEnergies
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    """"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-nf', '--numfiles', type=int,\
-            default=1, help='number of fes.dat files')
+    parser.add_argument(
+        "-d", "--datafiles", nargs="*", default=["fes.dat"], 
+        help="number of fes.dat files"
+    )
+    parser.add_argument(
+        "--names", nargs="*", default=None, 
+        help="names"
+    )
+    parser.add_argument(
+        "-t", "--title", default="MetaDynamics Convergence Analysis", 
+        help="title"
+    )
 
     args = parser.parse_args()
 
-    datList = []
-    if args.numfiles == 1:
-        datList.append('fes.dat')
-    else:
-        for idx in range(args.numfiles):
-            datList.append('fes_'+str(idx)+'.dat')
+    
+    datList = args.datafiles
+    ndatafiles = len(args.datafiles)
+    if args.names is None:
+        args.names = [str(i) for i in range(ndatafiles)]
+    names = args.names
+
+    kJMol2eV = 1/96.485
+    nm2ang = 10.
 
     # check the CV dimensions
     cvDict, freeEnergies = read_fesdat(datList[0])
@@ -107,28 +116,33 @@ if __name__ == '__main__':
     # plot figure(s)
     if len(cvDict.keys()) == 1:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
-        ax.set_title('MetaDynamics Convergence Analysis', \
-                fontsize=20, fontweight='bold')
+        ax.set_title(args.title)
 
-        ax.set_xlabel('Collective Variable', fontsize=16)
-        ax.set_ylabel('Free Energy', fontsize=16)
-
-        for datFile in datList:
+        ax.set_xlabel("Collective Variable") 
+        ax.set_ylabel("Free Energy [eV]") 
+        for name, datFile in zip(names, datList):
             cvDict, freeEnergies = read_fesdat(datFile)
-            ax.plot(cvDict[0]['points']*10, freeEnergies, label=datFile)
+            ax.plot(cvDict[0]['points']*nm2ang, freeEnergies*kJMol2eV, label=name)
         ax.legend()
     elif len(cvDict.keys()) == 2:
         for datFile in datList:
-            cvDict, freeEnergies = read_fesdat(datFile)
+            cvDict, free_energies = read_fesdat(datFile)
+            free_energies *= kJMol2eV
+            cv1, cv2 = cvDict[0]["points"], cvDict[0]["points"]
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
-            cn = ax.contour(cvDict[0]['points'], cvDict[1]['points'], freeEnergies) 
-                #levels=14, linewidth=0.5, color='k')
-            cntr = ax.contourf(cvDict[0]['points'], cvDict[1]['points'], freeEnergies, 
-                levels=12, cmap='RdBu')
-            fig.colorbar(cntr, ax=ax)
+            ax.set_xlabel("CV 1")
+            ax.set_ylabel("CV 2")
+            cn = ax.contour(cv1, cv2, free_energies)
+            cntr = ax.contourf(
+                cv1, cv2, free_energies, levels=5, #cmap='RdBu'
+            )
+            fig.colorbar(cntr, ax=ax, label="Free Energy [eV]")
             plt.clabel(cn, inline=True, fontsize=12)
             plt.savefig(os.path.splitext(os.path.basename(datFile))[0]+'.png')
     else:
         pass
 
     plt.savefig('fes.png')
+
+if __name__ == "__main__":
+    ...
