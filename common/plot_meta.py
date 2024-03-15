@@ -108,7 +108,8 @@ if __name__ == "__main__":
     names = args.names
 
     kJMol2eV = 1/96.485
-    nm2ang = 10.
+    #nm2ang = 10.
+    nm2ang = 1.
 
     # check the CV dimensions
     cvDict, freeEnergies = read_fesdat(datList[0])
@@ -128,16 +129,19 @@ if __name__ == "__main__":
         for datFile in datList:
             cvDict, free_energies = read_fesdat(datFile)
             free_energies *= kJMol2eV
-            cv1, cv2 = cvDict[0]["points"], cvDict[0]["points"]
+            cv1, cv2 = cvDict[0]["points"], cvDict[1]["points"]
+            print(cv1)
+            print(cv2)
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12,8))
+            ax.set_title("Free Energy Landscape")
             ax.set_xlabel("CV 1")
             ax.set_ylabel("CV 2")
-            cn = ax.contour(cv1, cv2, free_energies)
+            cn = ax.contour(cv1, cv2, free_energies, cmap="RdBu")
             cntr = ax.contourf(
-                cv1, cv2, free_energies, levels=5, #cmap='RdBu'
+                cv1, cv2, free_energies, levels=12, cmap="RdBu"
             )
             fig.colorbar(cntr, ax=ax, label="Free Energy [eV]")
-            plt.clabel(cn, inline=True, fontsize=12)
+            plt.clabel(cn, inline=True, fontsize=12, colors="k")
             plt.savefig(os.path.splitext(os.path.basename(datFile))[0]+'.png')
     else:
         pass
