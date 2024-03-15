@@ -18,10 +18,15 @@ from ase.io import read, write
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lcurve', \
-            default='lcurve.out', help='text file with learning rate and loss')
-    parser.add_argument('-s', '--start', type=int,\
-            default=0, help='text file with learning rate and loss')
+    parser.add_argument(
+        '--lcurve', 
+        default='lcurve.out', 
+        help='text file with learning rate and loss'
+    )
+    parser.add_argument(
+        '-s', '--start', type=int,
+        default=0, help='text file with learning rate and loss'
+    )
 
     args = parser.parse_args()
 
