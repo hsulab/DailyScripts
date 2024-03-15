@@ -21,6 +21,10 @@ parser.add_argument(
     default='./', help='vasp calculation directory'
 )
 parser.add_argument(
+    '-dp', '--dir_pattern', 
+    default="O*", help='calculation directory pattern'
+)
+parser.add_argument(
     '-p', '--pattern', 
     default='vasp_0_*', help='vasp directory name pattern'
 )
@@ -47,6 +51,48 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+def find_job_in_queue(d):
+    """"""
+    command = "squeue --user 40247882 --format=\"%.12i %.12P %.24j %.4t %.12M %.12L %.5D %.4C\""
+    proc = subprocess.Popen(
+        command, shell=True, cwd=d,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        encoding = 'utf-8'
+    )
+    errorcode = proc.wait(timeout=10) # 10 seconds
+    if errorcode:
+        raise ValueError('Error in checking job...')
+
+    lines = proc.stdout.readlines()
+    job_ids = [
+        line.split()[0] for line in lines
+    ][1:]
+    #print(job_ids)
+
+    wds = []
+    for job_id in job_ids:
+        command = "scontrol show job {}".format(job_id)
+        proc = subprocess.Popen(
+            command, shell=True, cwd=d,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            encoding = 'utf-8'
+        )
+        errorcode = proc.wait(timeout=10) # 10 seconds
+        if errorcode:
+            raise ValueError('Error in checking job...')
+        lines = proc.stdout.readlines()
+        for line in lines:
+            line = line.strip()
+            if line.startswith("WorkDir="):
+                wds.append(line[8:])
+
+    flag = False
+    if str(d) in wds:
+        print("job already in queue...")
+        flag = True
+
+    return flag
+
 def find_vasp_dirs(wd):
     cur_vasp_dirs = []
     for p in wd.glob(args.pattern):
@@ -55,9 +101,9 @@ def find_vasp_dirs(wd):
 
     return cur_vasp_dirs
 
-if __name__ == '__main__':
+def check_single_dir(d):
     # wd
-    d = Path(args.dir)
+    d = Path(d).absolute()
 
     # find structures
     structures_in = list(d.glob("O*.xyz"))[0]
@@ -77,7 +123,11 @@ if __name__ == '__main__':
     if nframes_in != nvaspdirs:
         print("need to resubmit job...")
     else:
-        exit()
+        return
+
+    # check job if already in queue
+    if find_job_in_queue(d):
+        return
 
     # read job script
     job_script = d / "vasp.slurm"
@@ -107,3 +157,11 @@ if __name__ == '__main__':
 
     print(''.join(proc.stdout.readlines()))
 
+if __name__ == '__main__':
+    cwd = Path(args.dir)
+    calc_dirs = list(cwd.glob(args.dir_pattern))
+    calc_dirs.sort()
+    print("number of dirs: ", len(calc_dirs))
+    for d in calc_dirs:
+        print("\n\n===== {} =====".format(d))
+        check_single_dir(d)

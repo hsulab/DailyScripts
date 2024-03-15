@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-
+#!/usr/bin/env python3 
 import os
 import time
 import json
@@ -186,7 +185,8 @@ def create_slurm(directory, partition='k2-hipri', time='3:00:00', ncpus='32'):
 def create_vasp_inputs(atoms, incar=None, directory='vasp-test'): 
     """only for molecules"""
     # pseudo 
-    pp_path = "/mnt/scratch/chemistry-apps/dkb01416/vasp/PseudoPotential"
+    #pp_path = "/mnt/scratch/chemistry-apps/dkb01416/vasp/PseudoPotential"
+    pp_path = "/mnt/scratch2/users/40247882/bak.dkb01416/vasp/PseudoPotential"
     if 'VASP_PP_PATH' in os.environ.keys():
         os.environ.pop('VASP_PP_PATH')
     os.environ['VASP_PP_PATH'] = pp_path

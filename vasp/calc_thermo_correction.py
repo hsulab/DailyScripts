@@ -44,6 +44,10 @@ parser.add_argument(
     "-t", "--temperature", default=300., type=float,
     help = "temperature for harmonic limit correction"
 )
+parser.add_argument(
+    "-ad", "--adsorbate", action="store_true",
+    help = "whether calculate adsorbate"
+)
 args = parser.parse_args()
 
 outcar = Path(args.outcar)
@@ -53,11 +57,31 @@ temperature = args.temperature
 freqs, lines = read_frequencies(outcar)
 
 use_ase = True
+#use_ase = False
 if use_ase:
-    from ase.thermochemistry import HarmonicThermo
+    # get real vibrational energies
     vib_energies = [x for x in (np.real(freqs)/1000.).tolist() if x > 0.] # meV to eV
-    thermo = HarmonicThermo(vib_energies)
-    print(thermo.get_helmholtz_energy(temperature))
+
+    # choose thermo
+    is_adsorbate = args.adsorbate
+    if is_adsorbate:
+        from ase.thermochemistry import HarmonicThermo
+        thermo = HarmonicThermo(vib_energies)
+        print(thermo.get_helmholtz_energy(temperature))
+    else:
+        from ase.io import read
+        contcar = outcar.parent / "CONTCAR"
+        atoms = read(contcar)
+        from ase.thermochemistry import IdealGasThermo
+        thermo = IdealGasThermo(
+            vib_energies=vib_energies,
+            potentialenergy=0.,
+            atoms=atoms,
+            geometry="linear",
+            symmetrynumber=2, 
+            spin=0
+        )
+        print(thermo.get_gibbs_energy(temperature, pressure=101325.))
 else:
     detail = True
     T = temperature
