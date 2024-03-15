@@ -12,7 +12,7 @@ saved_fnames=('INCAR' 'POSCAR' 'KPOINTS' 'POTCAR' 'CONTCAR' \
               'POSCAR_origin' 'RCOCAR' 'PCVCAR' \
               'plumed.inp' 'plumed.dat' 'plumed.out' \
               'vasp.pbs' 'vasp.slurm' 'vasp.sh' 'vasp.script' \
-              'fort.188')
+              'fort.188' 'ase-sort.dat')
 
 # add saved files from arguments
 saved_fnames=(${saved_fnames[@]} $@)
